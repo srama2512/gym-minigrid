@@ -1,7 +1,7 @@
 import math
 import operator
 from functools import reduce
-
+import cv2
 import numpy as np
 
 import gym
@@ -73,6 +73,26 @@ class StateBonus(gym.core.Wrapper):
         reward += bonus
 
         return obs, reward, done, info
+
+class ScaledObsWrapper(gym.core.ObservationWrapper):
+    """
+    Take input observation image (256x256x3) and scale it down to
+    84x84x1.
+    """
+
+    def __init__(self, env):
+        super().__init__(env)
+        self.observation_space = spaces.Box(
+            low=0,
+            high=255,
+            shape=(84, 84, 1),
+            dtype='uint8'
+        )
+
+    def observation(self, obs):
+        # obs = 256x256x3 array
+        image = obs
+        return cv2.resize(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), (84, 84))
 
 class FlatObsWrapper(gym.core.ObservationWrapper):
     """

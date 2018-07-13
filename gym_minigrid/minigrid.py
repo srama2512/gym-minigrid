@@ -12,6 +12,9 @@ CELL_PIXELS = 32
 # Number of cells (width and height) in the agent view
 AGENT_VIEW_SIZE = 7
 
+# Grid rendering size
+GRID_ARRAY_SIZE = (256, 256, 3)
+
 # Size of the array given as an observation to the agent
 OBS_ARRAY_SIZE = (AGENT_VIEW_SIZE, AGENT_VIEW_SIZE, 3)
 
@@ -633,7 +636,7 @@ class MiniGridEnv(gym.Env):
         self.observation_space = spaces.Box(
             low=0,
             high=255,
-            shape=OBS_ARRAY_SIZE,
+            shape=GRID_ARRAY_SIZE,
             dtype='uint8'
         )
         self.observation_space = spaces.Dict({
@@ -688,7 +691,7 @@ class MiniGridEnv(gym.Env):
         self.step_count = 0
 
         # Return first observation
-        obs = self.gen_obs()
+        obs = self.get_grid_render()
         return obs
 
     def seed(self, seed=1337):
