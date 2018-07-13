@@ -664,11 +664,11 @@ class MiniGridEnv(gym.Env):
         # Initialize the state
         self.reset()
 
-    def reset(self):
+    def reset(self, start_pos=None, start_dir=None):
         # Generate a new random grid at the start of each episode
         # To keep the same grid for each episode, call env.seed() with
         # the same seed before calling env.reset()
-        self._gen_grid(self.grid_size, self.grid_size)
+        self._gen_grid(self.grid_size, self.grid_size, start_pos, start_dir)
 
         # These fields should be defined by _gen_grid
         assert self.start_pos is not None
@@ -788,7 +788,7 @@ class MiniGridEnv(gym.Env):
 
         return "\n".join([" ".join(line) for line in new_array])
 
-    def _gen_grid(self, width, height):
+    def _gen_grid(self, width, height, start_pos=None, start_dir=None):
         assert False, "_gen_grid needs to be implemented by each environment"
 
     def _reward(self):
@@ -1079,8 +1079,9 @@ class MiniGridEnv(gym.Env):
 
         if self.step_count >= self.max_steps:
             done = True
-
-        obs = self.gen_obs()
+        
+        #obs = self.gen_obs()
+        obs = self.get_grid_render()
 
         return obs, reward, done, {}
 
@@ -1182,7 +1183,10 @@ class MiniGridEnv(gym.Env):
 
         return r.getPixmap()
 
-    def render(self, mode='human', close=False):
+    def get_grid_render(self):
+        return self.render(mode='rgb_array', close=False, show_seen=False)
+
+    def render(self, mode='human', close=False, show_seen=True):
         """
         Render the whole-grid human view
         """
@@ -1221,34 +1225,35 @@ class MiniGridEnv(gym.Env):
             (-12, -10)
         ])
         r.pop()
+        
+        if show_seen:
+            # Compute which cells are visible to the agent
+            _, vis_mask = self.gen_obs_grid()
 
-        # Compute which cells are visible to the agent
-        _, vis_mask = self.gen_obs_grid()
+            # Compute the absolute coordinates of the bottom-left corner
+            # of the agent's view area
+            f_vec = self.dir_vec
+            r_vec = self.right_vec
+            top_left = self.agent_pos + f_vec * (AGENT_VIEW_SIZE-1) - r_vec * (AGENT_VIEW_SIZE // 2)
 
-        # Compute the absolute coordinates of the bottom-left corner
-        # of the agent's view area
-        f_vec = self.dir_vec
-        r_vec = self.right_vec
-        top_left = self.agent_pos + f_vec * (AGENT_VIEW_SIZE-1) - r_vec * (AGENT_VIEW_SIZE // 2)
+            # For each cell in the visibility mask
+            for vis_j in range(0, AGENT_VIEW_SIZE):
+                for vis_i in range(0, AGENT_VIEW_SIZE):
+                    # If this cell is not visible, don't highlight it
+                    if not vis_mask[vis_i, vis_j]:
+                        continue
 
-        # For each cell in the visibility mask
-        for vis_j in range(0, AGENT_VIEW_SIZE):
-            for vis_i in range(0, AGENT_VIEW_SIZE):
-                # If this cell is not visible, don't highlight it
-                if not vis_mask[vis_i, vis_j]:
-                    continue
+                    # Compute the world coordinates of this cell
+                    abs_i, abs_j = top_left - (f_vec * vis_j) + (r_vec * vis_i)
 
-                # Compute the world coordinates of this cell
-                abs_i, abs_j = top_left - (f_vec * vis_j) + (r_vec * vis_i)
-
-                # Highlight the cell
-                r.fillRect(
-                    abs_i * CELL_PIXELS,
-                    abs_j * CELL_PIXELS,
-                    CELL_PIXELS,
-                    CELL_PIXELS,
-                    255, 255, 255, 75
-                )
+                    # Highlight the cell
+                    r.fillRect(
+                        abs_i * CELL_PIXELS,
+                        abs_j * CELL_PIXELS,
+                        CELL_PIXELS,
+                        CELL_PIXELS,
+                        255, 255, 255, 75
+                    )
 
         r.endFrame()
 

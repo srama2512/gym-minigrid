@@ -2,12 +2,14 @@
 
 from __future__ import division, print_function
 
+import pdb
 import sys
 import numpy
 import gym
 import time
 from optparse import OptionParser
 
+import matplotlib.pyplot as plt
 import gym_minigrid
 
 def main():
@@ -17,7 +19,7 @@ def main():
         "--env-name",
         dest="env_name",
         help="gym environment to load",
-        default='MiniGrid-MultiRoom-N6-v0'
+        default='MiniGrid-Empty-NoGoal-8x8-v0'
     )
     (options, args) = parser.parse_args()
 
@@ -66,7 +68,6 @@ def main():
             return
 
         obs, reward, done, info = env.step(action)
-
         print('step=%s, reward=%.2f' % (env.step_count, reward))
 
         if done:
@@ -76,7 +77,7 @@ def main():
     renderer.window.setKeyDownCb(keyDownCb)
 
     while True:
-        env.render('human')
+        env.render('human', show_seen=False)
         time.sleep(0.01)
 
         # If the window was closed
