@@ -92,7 +92,8 @@ class ScaledObsWrapper(gym.core.ObservationWrapper):
     def observation(self, obs):
         # obs = 256x256x3 array
         image = obs
-        return cv2.resize(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), (84, 84))
+        image_gray = cv2.resize(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), (84, 84))
+        return image_gray[:, :, np.newaxis]
 
 class FlatObsWrapper(gym.core.ObservationWrapper):
     """

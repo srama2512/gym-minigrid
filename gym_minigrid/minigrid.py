@@ -1,3 +1,4 @@
+import pdb
 import math
 import gym
 from enum import IntEnum
@@ -1087,6 +1088,11 @@ class MiniGridEnv(gym.Env):
         obs = self.get_grid_render()
 
         return obs, reward, done, {}
+
+    def dummy_step(self):
+        obs = self.get_grid_render()
+
+        return obs, 0, False, {}
 
     def gen_obs_grid(self):
         """
