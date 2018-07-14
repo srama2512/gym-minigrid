@@ -1193,7 +1193,42 @@ class MiniGridEnv(gym.Env):
         return r.getPixmap()
 
     def get_grid_render(self):
-        return self.render(mode='rgb_array', close=False, show_seen=False)
+        """
+        Use this for full observability.
+        Render the whole-grid view for observations
+        """
+
+        if self.obs_render is None:
+            self.obs_render = Renderer(
+                self.grid_size * CELL_PIXELS,
+                self.grid_size * CELL_PIXELS,
+                False
+            )
+
+        r = self.obs_render
+
+        r.beginFrame()
+        # Render the whole grid
+        self.grid.render(r, CELL_PIXELS)
+        # Draw the agent
+        r.push()
+        r.translate(
+            CELL_PIXELS * (self.agent_pos[0] + 0.5),
+            CELL_PIXELS * (self.agent_pos[1] + 0.5)
+        )
+        r.rotate(self.agent_dir * 90)
+        r.setLineColor(255, 0, 0)
+        r.setColor(255, 0, 0)
+        r.drawPolygon([
+            (-12, 10),
+            ( 12,  0),
+            (-12, -10)
+        ])
+        r.pop()
+        
+        r.endFrame()
+
+        return r.getArray()
 
     def render(self, mode='human', close=False, show_seen=True):
         """
@@ -1215,10 +1250,8 @@ class MiniGridEnv(gym.Env):
         r = self.grid_render
 
         r.beginFrame()
-
         # Render the whole grid
         self.grid.render(r, CELL_PIXELS)
-
         # Draw the agent
         r.push()
         r.translate(
