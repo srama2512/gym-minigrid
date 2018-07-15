@@ -19,7 +19,7 @@ def main():
         "--env-name",
         dest="env_name",
         help="gym environment to load",
-        default='MiniGrid-Empty-NoGoal-8x8-v0'
+        default='MiniGrid-Empty-NoGoal-Simple-8x8-v0'
     )
     (options, args) = parser.parse_args()
 
@@ -34,8 +34,8 @@ def main():
     resetEnv()
 
     # Create a window to render into
-    renderer = env.render('human')
-
+    renderer = env.render(mode='human')
+    
     def keyDownCb(keyName):
         if keyName == 'BACKSPACE':
             resetEnv()
@@ -69,7 +69,8 @@ def main():
 
         obs, reward, done, info = env.step(action)
         print('step=%s, reward=%.2f' % (env.step_count, reward))
-
+        print([obs['image'][:, :, i] for i in range(3)])
+        print(obs['image'].shape)
         if done:
             print('done!')
             resetEnv()

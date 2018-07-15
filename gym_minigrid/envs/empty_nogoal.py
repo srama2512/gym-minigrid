@@ -6,12 +6,13 @@ class EmptyEnvNoGoal(MiniGridEnv):
     Empty grid environment, no obstacles, sparse reward
     """
 
-    def __init__(self, size=8):
+    def __init__(self, size=8, mode='rgb'):
         super().__init__(
             grid_size=size,
             max_steps=4*size*size,
             # Set this to True for maximum speed
-            see_through_walls=True
+            see_through_walls=True,
+            mode=mode
         )
         self.start_pos_all = self._all_starts()
         self.dir_all = (0, 1, 2, 3)
@@ -57,6 +58,18 @@ class EmptyEnvNoGoal16x16(EmptyEnvNoGoal):
     def __init__(self):
         super().__init__(size=16)
 
+class EmptyEnvNoGoalSimple6x6(EmptyEnvNoGoal):
+    def __init__(self):
+        super().__init__(size=6, mode='grid')
+
+class EmptyEnvNoGoalSimple8x8(EmptyEnvNoGoal):
+    def __init__(self):
+        super().__init__(size=8, mode='grid')
+
+class EmptyEnvNoGoalSimple16x16(EmptyEnvNoGoal):
+    def __init__(self):
+        super().__init__(size=16, mode='grid')
+
 register(
     id='MiniGrid-Empty-NoGoal-6x6-v0',
     entry_point='gym_minigrid.envs:EmptyEnvNoGoal6x6'
@@ -71,3 +84,19 @@ register(
     id='MiniGrid-Empty-NoGoal-16x16-v0',
     entry_point='gym_minigrid.envs:EmptyEnvNoGoal16x16'
 )
+
+register(
+    id='MiniGrid-Empty-NoGoal-Simple-6x6-v0',
+    entry_point='gym_minigrid.envs:EmptyEnvNoGoalSimple6x6'
+)
+
+register(
+    id='MiniGrid-Empty-NoGoal-Simple-8x8-v0',
+    entry_point='gym_minigrid.envs:EmptyEnvNoGoalSimple8x8'
+)
+
+register(
+    id='MiniGrid-Empty-NoGoal-Simple-16x16-v0',
+    entry_point='gym_minigrid.envs:EmptyEnvNoGoalSimple16x16'
+)
+
