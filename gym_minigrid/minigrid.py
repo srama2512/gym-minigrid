@@ -624,7 +624,8 @@ class MiniGridEnv(gym.Env):
         grid_size=16,
         max_steps=100,
         see_through_walls=False,
-        seed=1337
+        seed=1337,
+        mode='rgb'
     ):
         # Action enumeration for this environment
         self.actions = MiniGridEnv.Actions
@@ -632,14 +633,29 @@ class MiniGridEnv(gym.Env):
         # Actions are discrete integer values
         self.action_space = spaces.Discrete(len(self.actions))
 
+        # Store the mode. If rgb, then return the RGB rendering of the 
+        # environment. Otherwise, return the grid encoding specified for
+        # the entire grid.
+        self.mode = mode
         # Observations are dictionaries containing an
         # encoding of the grid and a textual 'mission' string
-        self.observation_space = spaces.Box(
-            low=0,
-            high=255,
-            shape=GRID_ARRAY_SIZE,
-            dtype='uint8'
-        )
+        if mode == 'rgb':
+            self.observation_space = spaces.Box(
+                low=0,
+                high=255,
+                shape=GRID_ARRAY_SIZE,
+                dtype='uint8'
+            )
+        elif mode == 'grid':
+            self.observation_space = spaces.Box(
+                low=0,
+                high=255,
+                shape=(grid_size, grid_size, 3),
+                dtype='uint8'
+            )
+        else:
+            raise ValueError('No mode named %s'%mode)
+
         self.observation_space = spaces.Dict({
             'image': self.observation_space
         })
@@ -1085,7 +1101,10 @@ class MiniGridEnv(gym.Env):
             done = True
         
         #obs = self.gen_obs()
-        obs = self.get_grid_render()
+        if self.mode == 'rgb':
+            obs = self.get_grid_render()
+        else:
+            obs = self.gen_full()
 
         return obs, reward, done, {}
 
@@ -1126,6 +1145,24 @@ class MiniGridEnv(gym.Env):
 
         return grid, vis_mask
 
+    def gen_full_grid(self):
+        """
+        Generate the full grid.
+        """
+
+        grid = self.grid
+
+        # Make it so the agent sees what it's carrying
+        # We do this by placing the carried object at the agent's position
+        # in the agent's partially observable view
+        agent_pos = self.agent_pos 
+        if self.carrying:
+            grid.set(*agent_pos, self.carrying)
+        else:
+            grid.set(*agent_pos, None)
+
+        return grid
+
     def gen_obs(self):
         """
         Generate the agent's view (partially observable, low-resolution encoding)
@@ -1144,6 +1181,31 @@ class MiniGridEnv(gym.Env):
         # - a textual mission string (instructions for the agent)
         obs = {
             'image': image,
+            'direction': self.agent_dir,
+            'mission': self.mission
+        }
+
+        return obs
+
+    def gen_full(self):
+        """
+        Generate the full grid view (fully observable, low-resolution encoding)
+        """
+
+        grid = self.gen_full_grid()
+
+        # Encode the view into a numpy array
+        image = grid.encode()
+
+        assert hasattr(self, 'mission'), "environments must define a textual mission string"
+
+        # Observations are dictionaries containing:
+        # - an image (partially observable view of the environment)
+        # - the agent's direction/orientation (acting as a compass)
+        # - a textual mission string (instructions for the agent)
+        obs = {
+            'image': image,
+            'position': self.agent_pos,
             'direction': self.agent_dir,
             'mission': self.mission
         }
