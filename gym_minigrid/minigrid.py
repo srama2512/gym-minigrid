@@ -610,14 +610,14 @@ class MiniGridEnv(gym.Env):
         forward = 2
 
         # Pick up an object
-        pickup = 3
+        #pickup = 3
         # Drop an object
-        drop = 4
+        #drop = 4
         # Toggle/activate an object
-        toggle = 5
+        #toggle = 5
 
         # Done completing task
-        done = 6
+        #done = 6
 
     def __init__(
         self,
@@ -1228,7 +1228,7 @@ class MiniGridEnv(gym.Env):
         
         r.endFrame()
 
-        return r.getArray()
+        return r.getArray().copy()
 
     def render(self, mode='human', close=False, show_seen=True):
         """
