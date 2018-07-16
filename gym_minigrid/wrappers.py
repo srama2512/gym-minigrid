@@ -77,7 +77,7 @@ class StateBonus(gym.core.Wrapper):
 class ScaledObsWrapper(gym.core.ObservationWrapper):
     """
     Take input observation image (256x256x3) and scale it down to
-    84x84x1.
+    84x84x1. Ignores mission strings.
     """
 
     def __init__(self, env):
@@ -94,6 +94,58 @@ class ScaledObsWrapper(gym.core.ObservationWrapper):
         image = obs
         image_gray = cv2.resize(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), (84, 84))
         return image_gray[:, :, np.newaxis]
+
+class SimpleFlatObsWrapper(gym.core.ObservationWrapper):
+    """
+    Converts 84x84x1 image into a 7056 vector
+    """
+    def __init__(self, env):
+        super().__init__(env)
+        self.observation_space = spaces.Box(
+            low=0,
+            high=255,
+            shape=(7056,),
+            dtype='uint8'
+        )
+
+    def observation(self, obs):
+        return obs.flatten()
+
+class PosDirFlatWrapper(gym.core.ObservationWrapper):
+    """
+    Returns just the position, direction as flattened array
+    """
+    def __init__(self, env):
+        super().__init__(env)
+        self.observation_space = spaces.Box(
+            low=0,
+            high=255,
+            shape=(3,),
+            dtype='float32'
+        )
+
+    def observation(self, obs):
+        return np.array([obs['position'][0], obs['position'][1], obs['direction']])
+
+class PosDirObsFlatWrapper(gym.core.ObservationWrapper):
+    """
+    Returns the position, direction and observation grid as flattened array
+    """
+    def __init__(self, env):
+        super().__init__(env)
+        self.observation_space = spaces.Box(
+            low=0,
+            high=255,
+            shape=(3 + reduce((lambda x, y: x* y), self.observation_space.shape), ),
+            dtype='float32'
+        )
+
+    def observation(self, obs):
+        # width x height x 3 array
+        pos_dir = np.array([obs['position'][0], obs['position'][1], obs['direction']])
+        pos_dir_obs = np.concatenate([obs['image'].flatten(), pos_dir], axis=0)
+
+        return pos_dir_obs
 
 class FlatObsWrapper(gym.core.ObservationWrapper):
     """

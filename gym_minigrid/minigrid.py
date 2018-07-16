@@ -708,7 +708,11 @@ class MiniGridEnv(gym.Env):
         self.step_count = 0
 
         # Return first observation
-        obs = self.get_grid_render()
+        if self.mode == 'rgb':
+            obs = self.get_grid_render()
+        else:
+            obs = self.gen_full()
+
         return obs
 
     def seed(self, seed=1337):
