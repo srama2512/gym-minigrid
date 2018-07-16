@@ -11,6 +11,7 @@ from optparse import OptionParser
 
 import matplotlib.pyplot as plt
 import gym_minigrid
+from gym_minigrid.wrappers import *
 
 def main():
     parser = OptionParser()
@@ -25,7 +26,7 @@ def main():
 
     # Load the gym environment
     env = gym.make(options.env_name)
-
+    env = PosDirObsFlatWrapper(env)
     def resetEnv():
         env.reset()
         if hasattr(env, 'mission'):
@@ -69,8 +70,10 @@ def main():
 
         obs, reward, done, info = env.step(action)
         print('step=%s, reward=%.2f' % (env.step_count, reward))
-        print([obs['image'][:, :, i] for i in range(3)])
-        print(obs['image'].shape)
+        #print('Image:', [obs['image'][:, :, i] for i in range(3)])
+        #print('Position:', obs['position'])
+        #print('Direction:', obs['direction'])
+        print(obs)
         if done:
             print('done!')
             resetEnv()
@@ -78,7 +81,7 @@ def main():
     renderer.window.setKeyDownCb(keyDownCb)
 
     while True:
-        env.render('human', show_seen=False)
+        env.render('human')
         time.sleep(0.01)
 
         # If the window was closed

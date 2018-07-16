@@ -88,12 +88,17 @@ class ScaledObsWrapper(gym.core.ObservationWrapper):
             shape=(84, 84, 1),
             dtype='uint8'
         )
+        self.actions = env.actions
 
     def observation(self, obs):
         # obs = 256x256x3 array
         image = obs
         image_gray = cv2.resize(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), (84, 84))
         return image_gray[:, :, np.newaxis]
+
+    @property
+    def step_count(self):
+        return self.env.step_count
 
 class SimpleFlatObsWrapper(gym.core.ObservationWrapper):
     """
@@ -107,9 +112,14 @@ class SimpleFlatObsWrapper(gym.core.ObservationWrapper):
             shape=(7056,),
             dtype='uint8'
         )
+        self.actions = env.actions
 
     def observation(self, obs):
         return obs.flatten()
+
+    @property
+    def step_count(self):
+        return self.env.step_count
 
 class PosDirFlatWrapper(gym.core.ObservationWrapper):
     """
@@ -123,9 +133,14 @@ class PosDirFlatWrapper(gym.core.ObservationWrapper):
             shape=(3,),
             dtype='float32'
         )
+        self.actions = env.actions
 
     def observation(self, obs):
         return np.array([obs['position'][0], obs['position'][1], obs['direction']])
+
+    @property
+    def step_count(self):
+        return self.env.step_count
 
 class PosDirObsFlatWrapper(gym.core.ObservationWrapper):
     """
@@ -136,9 +151,10 @@ class PosDirObsFlatWrapper(gym.core.ObservationWrapper):
         self.observation_space = spaces.Box(
             low=0,
             high=255,
-            shape=(3 + reduce((lambda x, y: x* y), self.observation_space.shape), ),
+            shape=(3 + reduce((lambda x, y: x* y), self.observation_space.spaces['image'].shape), ),
             dtype='float32'
         )
+        self.actions = env.actions
 
     def observation(self, obs):
         # width x height x 3 array
@@ -146,6 +162,10 @@ class PosDirObsFlatWrapper(gym.core.ObservationWrapper):
         pos_dir_obs = np.concatenate([obs['image'].flatten(), pos_dir], axis=0)
 
         return pos_dir_obs
+   
+    @property
+    def step_count(self):
+        return self.env.step_count
 
 class FlatObsWrapper(gym.core.ObservationWrapper):
     """
@@ -168,6 +188,7 @@ class FlatObsWrapper(gym.core.ObservationWrapper):
             shape=(1, imgSize + self.numCharCodes * self.maxStrLen),
             dtype='uint8'
         )
+        self.actions = env.actions
 
         self.cachedStr = None
         self.cachedArray = None
@@ -197,3 +218,8 @@ class FlatObsWrapper(gym.core.ObservationWrapper):
         obs = np.concatenate((image.flatten(), self.cachedArray.flatten()))
 
         return obs
+
+    @property
+    def step_count(self):
+        return self.env.step_count
+
