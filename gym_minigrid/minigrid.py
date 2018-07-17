@@ -1113,7 +1113,10 @@ class MiniGridEnv(gym.Env):
         return obs, reward, done, {}
 
     def dummy_step(self):
-        obs = self.get_grid_render()
+        if self.mode == 'rgb':
+            obs = self.get_grid_render()
+        else:
+            obs = self.gen_full()
 
         return obs, 0, False, {}
 
