@@ -603,7 +603,7 @@ class MiniGridEnv(gym.Env):
     }
 
     # Enumeration of possible actions
-    class Actions(IntEnum):
+    class Actions_forward(IntEnum):
         # Turn left, turn right, move forward
         left = 0
         right = 1
@@ -619,16 +619,31 @@ class MiniGridEnv(gym.Env):
         # Done completing task
         #done = 6
 
+    class Actions_omni(IntEnum):
+        top = 0
+        right = 1
+        bottom = 2
+        left = 3
+
+
     def __init__(
         self,
         grid_size=16,
         max_steps=100,
         see_through_walls=False,
         seed=1337,
-        mode='rgb'
+        mode='rgb',
+        action_mode='forward' 
+        # 'forward' for forward, turn left, turn right and
+        # 'omni' for moving top, down, left, right
     ):
         # Action enumeration for this environment
-        self.actions = MiniGridEnv.Actions
+        if action_mode == 'forward':
+            self.actions = MiniGridEnv.Actions_forward
+        elif action_mode == 'omni':
+            self.actions = MiniGridEnv.Actions_omni
+        else:
+            raise ValueError('Action mode "%s" does not exist'%(action_mode))
 
         # Actions are discrete integer values
         self.action_space = spaces.Discrete(len(self.actions))
@@ -637,6 +652,7 @@ class MiniGridEnv(gym.Env):
         # environment. Otherwise, return the grid encoding specified for
         # the entire grid.
         self.mode = mode
+        self.action_mode = action_mode
         # Observations are dictionaries containing an
         # encoding of the grid and a textual 'mission' string
         if mode == 'rgb':
@@ -1050,56 +1066,85 @@ class MiniGridEnv(gym.Env):
         reward = 0
         done = False
 
-        # Get the position in front of the agent
-        fwd_pos = self.front_pos
+        if self.action_mode == 'forward':
+            # Get the position in front of the agent
+            fwd_pos = self.front_pos
 
-        # Get the contents of the cell in front of the agent
-        fwd_cell = self.grid.get(*fwd_pos)
+            # Get the contents of the cell in front of the agent
+            fwd_cell = self.grid.get(*fwd_pos)
 
-        # Rotate left
-        if action == self.actions.left:
-            self.agent_dir -= 1
-            if self.agent_dir < 0:
-                self.agent_dir += 4
+            # Rotate left
+            if action == self.actions.left:
+                self.agent_dir -= 1
+                if self.agent_dir < 0:
+                    self.agent_dir += 4
 
-        # Rotate right
-        elif action == self.actions.right:
-            self.agent_dir = (self.agent_dir + 1) % 4
+            # Rotate right
+            elif action == self.actions.right:
+                self.agent_dir = (self.agent_dir + 1) % 4
 
-        # Move forward
-        elif action == self.actions.forward:
+            # Move forward
+            elif action == self.actions.forward:
+                if fwd_cell == None or fwd_cell.can_overlap():
+                    self.agent_pos = fwd_pos
+                if fwd_cell != None and fwd_cell.type == 'goal':
+                    done = True
+                    reward = self._reward()
+
+            # Pick up an object
+            elif action == self.actions.pickup:
+                if fwd_cell and fwd_cell.can_pickup():
+                    if self.carrying is None:
+                        self.carrying = fwd_cell
+                        self.carrying.cur_pos = np.array([-1, -1])
+                        self.grid.set(*fwd_pos, None)
+
+            # Drop an object
+            elif action == self.actions.drop:
+                if not fwd_cell and self.carrying:
+                    self.grid.set(*fwd_pos, self.carrying)
+                    self.carrying.cur_pos = fwd_pos
+                    self.carrying = None
+
+            # Toggle/activate an object
+            elif action == self.actions.toggle:
+                if fwd_cell:
+                    fwd_cell.toggle(self, fwd_pos)
+
+            # Done action (not used by default)
+            elif action == self.actions.done:
+                pass
+
+            else:
+                assert False, "unknown action"
+        else:
+            
+            # Move left
+            if action == self.actions.left:
+                # Get the position left of the agent
+                delta_add = (-1, 0)
+            # Move right
+            elif action == self.actions.right:
+                # Get the position right of the agent
+                delta_add = (1, 0)
+            # Move top
+            elif action == self.actions.top:
+                # Get the position top of the agent
+                delta_add = (0, -1)
+            # Move bottom
+            elif action == self.actions.bottom:
+                # Get the position top of the agent
+                delta_add = (0, 1)
+
+            fwd_pos = tuple(sum(x) for x in zip(self.agent_pos, delta_add ))
+            # Get the contents of the cell
+            fwd_cell = self.grid.get(*fwd_pos)
+
             if fwd_cell == None or fwd_cell.can_overlap():
                 self.agent_pos = fwd_pos
             if fwd_cell != None and fwd_cell.type == 'goal':
                 done = True
                 reward = self._reward()
-
-        # Pick up an object
-        elif action == self.actions.pickup:
-            if fwd_cell and fwd_cell.can_pickup():
-                if self.carrying is None:
-                    self.carrying = fwd_cell
-                    self.carrying.cur_pos = np.array([-1, -1])
-                    self.grid.set(*fwd_pos, None)
-
-        # Drop an object
-        elif action == self.actions.drop:
-            if not fwd_cell and self.carrying:
-                self.grid.set(*fwd_pos, self.carrying)
-                self.carrying.cur_pos = fwd_pos
-                self.carrying = None
-
-        # Toggle/activate an object
-        elif action == self.actions.toggle:
-            if fwd_cell:
-                fwd_cell.toggle(self, fwd_pos)
-
-        # Done action (not used by default)
-        elif action == self.actions.done:
-            pass
-
-        else:
-            assert False, "unknown action"
 
         if self.step_count >= self.max_steps:
             done = True
