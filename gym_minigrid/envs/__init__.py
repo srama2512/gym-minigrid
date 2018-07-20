@@ -11,3 +11,4 @@ from gym_minigrid.envs.redbluedoors import *
 
 # NoGoal environments
 from gym_minigrid.envs.empty_nogoal import *
+from gym_minigrid.envs.multiroom_simple import *

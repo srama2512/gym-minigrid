@@ -26,14 +26,13 @@ def main():
 
     # Load the gym environment
     env = gym.make(options.env_name)
-    env = PosDirObsFlatWrapper(env)
+    #env = PosDirObsFlatWrapper(env)
     def resetEnv():
         env.reset()
         if hasattr(env, 'mission'):
             print('Mission: %s' % env.mission)
 
     resetEnv()
-
     # Create a window to render into
     renderer = env.render(mode='human')
     

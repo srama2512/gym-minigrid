@@ -37,8 +37,8 @@ class MultiRoomEnv(MiniGridEnv):
             grid_size=25,
             max_steps=self.maxNumRooms * 20
         )
-
-    def _gen_grid(self, width, height):
+    
+    def _gen_grid(self, width, height, start_pos=None, start_dir=None):
         roomList = []
 
         # Choose a random number of rooms to generate

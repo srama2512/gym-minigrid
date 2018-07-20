@@ -9,7 +9,7 @@ class EmptyEnvNoGoal(MiniGridEnv):
     def __init__(self, size=8, mode='rgb'):
         super().__init__(
             grid_size=size,
-            max_steps=4*size*size,
+            max_steps=10000,#4*size*size,
             # Set this to True for maximum speed
             see_through_walls=True,
             mode=mode
