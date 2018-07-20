@@ -45,27 +45,37 @@ def main():
             sys.exit(0)
 
         action = 0
+        if env.action_mode == 'forward':
+            if keyName == 'LEFT':
+                action = env.actions.left
+            elif keyName == 'RIGHT':
+                action = env.actions.right
+            elif keyName == 'UP':
+                action = env.actions.forward
 
-        if keyName == 'LEFT':
-            action = env.actions.left
-        elif keyName == 'RIGHT':
-            action = env.actions.right
-        elif keyName == 'UP':
-            action = env.actions.forward
+            elif keyName == 'SPACE':
+                action = env.actions.toggle
+            elif keyName == 'PAGE_UP':
+                action = env.actions.pickup
+            elif keyName == 'PAGE_DOWN':
+                action = env.actions.drop
 
-        elif keyName == 'SPACE':
-            action = env.actions.toggle
-        elif keyName == 'PAGE_UP':
-            action = env.actions.pickup
-        elif keyName == 'PAGE_DOWN':
-            action = env.actions.drop
+            elif keyName == 'CTRL':
+                action = env.actions.done
 
-        elif keyName == 'CTRL':
-            action = env.actions.done
+            else:
+                print("unknown key %s" % keyName)
+                return
 
-        else:
-            print("unknown key %s" % keyName)
-            return
+        elif env.action_mode == 'omni':
+            if keyName == 'LEFT':
+                action = env.actions.left
+            elif keyName == 'RIGHT':
+                action = env.actions.right
+            elif keyName == 'UP':
+                action = env.actions.top
+            elif keyName == 'DOWN':
+                action = env.actions.bottom
 
         obs, reward, done, info = env.step(action)
         print('step=%s, reward=%.2f' % (env.step_count, reward))
