@@ -13,3 +13,4 @@ from gym_minigrid.envs.redbluedoors import *
 from gym_minigrid.envs.empty_nogoal import *
 from gym_minigrid.envs.multiroom_simple import *
 from gym_minigrid.envs.vic_env import *
+from gym_minigrid.envs.vic_env_random import *
