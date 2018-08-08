@@ -624,6 +624,7 @@ class MiniGridEnv(gym.Env):
         right = 1
         bottom = 2
         left = 3
+        noop = 4
 
 
     def __init__(
@@ -1135,6 +1136,9 @@ class MiniGridEnv(gym.Env):
             elif action == self.actions.bottom:
                 # Get the position top of the agent
                 delta_add = (0, 1)
+            elif action == self.actions.noop:
+                # Stay at the same location
+                delta_add = (0, 0)
 
             fwd_pos = tuple(sum(x) for x in zip(self.agent_pos, delta_add ))
             # Get the contents of the cell
