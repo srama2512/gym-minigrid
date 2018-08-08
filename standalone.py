@@ -76,6 +76,8 @@ def main():
                 action = env.actions.top
             elif keyName == 'DOWN':
                 action = env.actions.bottom
+            elif keyName == 'SPACE':
+                action = env.actions.noop
 
         obs, reward, done, info = env.step(action)
         print('step=%s, reward=%.2f' % (env.step_count, reward))

@@ -6,13 +6,14 @@ class EmptyEnvNoGoal(MiniGridEnv):
     Empty grid environment, no obstacles, sparse reward
     """
 
-    def __init__(self, size=8, mode='rgb'):
+    def __init__(self, size=8, mode='rgb', action_mode='forward'):
         super().__init__(
             grid_size=size,
             max_steps=10000,#4*size*size,
             # Set this to True for maximum speed
             see_through_walls=True,
-            mode=mode
+            mode=mode,
+            action_mode=action_mode
         )
         self.start_pos_all = self._all_starts()
         self.dir_all = (0, 1, 2, 3)
@@ -50,6 +51,7 @@ class EmptyEnvNoGoal(MiniGridEnv):
                 start_pos_all.append((i, j))
         return start_pos_all
 
+# Normal forward mode
 class EmptyEnvNoGoal6x6(EmptyEnvNoGoal):
     def __init__(self):
         super().__init__(size=6)
@@ -58,17 +60,44 @@ class EmptyEnvNoGoal16x16(EmptyEnvNoGoal):
     def __init__(self):
         super().__init__(size=16)
 
-class EmptyEnvNoGoalSimple6x6(EmptyEnvNoGoal):
+# Grid versions of forward mode
+class EmptyGridEnvNoGoal6x6(EmptyEnvNoGoal):
     def __init__(self):
         super().__init__(size=6, mode='grid')
 
-class EmptyEnvNoGoalSimple8x8(EmptyEnvNoGoal):
+class EmptyGridEnvNoGoal8x8(EmptyEnvNoGoal):
     def __init__(self):
         super().__init__(size=8, mode='grid')
 
-class EmptyEnvNoGoalSimple16x16(EmptyEnvNoGoal):
+class EmptyGridEnvNoGoal16x16(EmptyEnvNoGoal):
     def __init__(self):
         super().__init__(size=16, mode='grid')
+
+# Normal omni mode
+class EmptyEnvOmniNoGoal6x6(EmptyEnvNoGoal):
+    def __init__(self):
+        super().__init__(size=6, action_mode='omni')
+
+class EmptyEnvOmniNoGoal8x8(EmptyEnvNoGoal):
+    def __init__(self):
+        super().__init__(size=8, action_mode='omni')
+
+class EmptyEnvOmniNoGoal16x16(EmptyEnvNoGoal):
+    def __init__(self):
+        super().__init__(size=16, action_mode='omni')
+
+# Grid versions of omni mode
+class EmptyGridEnvOmniNoGoal6x6(EmptyEnvNoGoal):
+    def __init__(self):
+        super().__init__(size=6, mode='grid', action_mode='omni')
+
+class EmptyGridEnvOmniNoGoal8x8(EmptyEnvNoGoal):
+    def __init__(self):
+        super().__init__(size=8, mode='grid', action_mode='omni')
+
+class EmptyGridEnvOmniNoGoal16x16(EmptyEnvNoGoal):
+    def __init__(self):
+        super().__init__(size=16, mode='grid', action_mode='omni')
 
 register(
     id='MiniGrid-Empty-NoGoal-6x6-v0',
@@ -86,17 +115,48 @@ register(
 )
 
 register(
-    id='MiniGrid-Empty-NoGoal-Simple-6x6-v0',
-    entry_point='gym_minigrid.envs:EmptyEnvNoGoalSimple6x6'
+    id='MiniGrid-Empty-NoGoal-6x6-v1',
+    entry_point='gym_minigrid.envs:EmptyGridEnvNoGoal6x6'
 )
 
 register(
-    id='MiniGrid-Empty-NoGoal-Simple-8x8-v0',
-    entry_point='gym_minigrid.envs:EmptyEnvNoGoalSimple8x8'
+    id='MiniGrid-Empty-NoGoal-8x8-v1',
+    entry_point='gym_minigrid.envs:EmptyGridEnvNoGoal'
 )
 
 register(
-    id='MiniGrid-Empty-NoGoal-Simple-16x16-v0',
-    entry_point='gym_minigrid.envs:EmptyEnvNoGoalSimple16x16'
+    id='MiniGrid-Empty-NoGoal-16x16-v1',
+    entry_point='gym_minigrid.envs:EmptyGridEnvNoGoal16x16'
 )
+
+register(
+    id='MiniGrid-Empty-NoGoal-6x6-v2',
+    entry_point='gym_minigrid.envs:EmptyEnvOmniNoGoal6x6'
+)
+
+register(
+    id='MiniGrid-Empty-NoGoal-8x8-v2',
+    entry_point='gym_minigrid.envs:EmptyEnvOmniNoGoal8x8'
+)
+
+register(
+    id='MiniGrid-Empty-NoGoal-16x16-v2',
+    entry_point='gym_minigrid.envs:EmptyEnvOmniNoGoal16x16'
+)
+
+register(
+    id='MiniGrid-Empty-NoGoal-6x6-v3',
+    entry_point='gym_minigrid.envs:EmptyGridEnvOmniNoGoal6x6'
+)
+
+register(
+    id='MiniGrid-Empty-NoGoal-8x8-v3',
+    entry_point='gym_minigrid.envs:EmptyGridEnvOmniNoGoal'
+)
+
+register(
+    id='MiniGrid-Empty-NoGoal-16x16-v3',
+    entry_point='gym_minigrid.envs:EmptyGridEnvOmniNoGoal16x16'
+)
+
 
