@@ -33,7 +33,7 @@ class EmptyEnvNoGoal(MiniGridEnv):
                 self.start_pos = start_pos
             else:
                 raise ValueError('(%d, %d) - Not a valid start position!'%(start_pos[0], start_pos[1]))
-
+        self.valid_starts = self._all_starts()
         if start_dir is None:
             self.start_dir = 0
         else:
