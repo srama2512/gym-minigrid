@@ -610,14 +610,14 @@ class MiniGridEnv(gym.Env):
         forward = 2
 
         # Pick up an object
-        #pickup = 3
+        pickup = 3
         # Drop an object
-        #drop = 4
+        drop = 4
         # Toggle/activate an object
-        #toggle = 5
+        toggle = 5
 
         # Done completing task
-        #done = 6
+        done = 6
 
     class Actions_omni(IntEnum):
         top = 0
@@ -634,9 +634,10 @@ class MiniGridEnv(gym.Env):
         see_through_walls=False,
         seed=1337,
         mode='rgb',
-        action_mode='forward' 
+        action_mode='forward',
         # 'forward' for forward, turn left, turn right and
         # 'omni' for moving top, down, left, right
+        terminate_at_goal=True
     ):
         # Action enumeration for this environment
         if action_mode == 'forward':
@@ -648,6 +649,9 @@ class MiniGridEnv(gym.Env):
 
         # Actions are discrete integer values
         self.action_space = spaces.Discrete(len(self.actions))
+        
+        # Terminate once the goal is reached?
+        self.terminate_at_goal = terminate_at_goal
 
         # Store the mode. If rgb, then return the RGB rendering of the 
         # environment. Otherwise, return the grid encoding specified for
@@ -1088,7 +1092,7 @@ class MiniGridEnv(gym.Env):
             elif action == self.actions.forward:
                 if fwd_cell == None or fwd_cell.can_overlap():
                     self.agent_pos = fwd_pos
-                if fwd_cell != None and fwd_cell.type == 'goal':
+                if fwd_cell != None and fwd_cell.type == 'goal' and self.terminate_at_goal:
                     done = True
                     reward = self._reward()
 
