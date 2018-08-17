@@ -265,7 +265,14 @@ class MultiRoomEnvN2S8(MultiRoomEnv):
             maxNumRooms=2,
             maxRoomSize=8
         )
-
+class MultiRoomEnvN2S8_po(MultiRoomEnv):
+    def __init__(self):
+        super().__init__(
+            minNumRooms=2,
+            maxNumRooms=2,
+            maxRoomSize=8,
+            partial_obs=True
+        )
 class MultiRoomEnvN2S8_noterm(MultiRoomEnv):
     def __init__(self):
         super().__init__(
@@ -301,6 +308,11 @@ register(
 register(
     id='MiniGrid-MultiRoom-N2-S8-v0',
     entry_point='gym_minigrid.envs:MultiRoomEnvN2S8',
+    reward_threshold=1000.0
+)
+register(
+    id='MiniGrid-MultiRoom-N2-S8-v4',
+    entry_point='gym_minigrid.envs:MultiRoomEnvN2S8_po',
     reward_threshold=1000.0
 )
 register(
