@@ -77,6 +77,9 @@ class MultiRoomEnv(MiniGridEnv):
         # Create the grid
         self.grid = Grid(width, height)
         wall = Wall()
+        
+        # Valid starts
+        self.valid_starts = []
 
         prevDoorColor = None
 
@@ -85,6 +88,10 @@ class MultiRoomEnv(MiniGridEnv):
 
             topX, topY = room.top
             sizeX, sizeY = room.size
+
+            for i in range(1, sizeX-1):
+                for j in range(1, sizeY-1):
+                    self.valid_starts.append((i, j))
 
             # Draw the top and bottom walls
             for i in range(0, sizeX):
