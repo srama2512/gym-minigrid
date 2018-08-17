@@ -18,6 +18,7 @@ GRID_ARRAY_SIZE = (256, 256, 3)
 
 # Size of the array given as an observation to the agent
 OBS_ARRAY_SIZE = (AGENT_VIEW_SIZE, AGENT_VIEW_SIZE, 3)
+OBS_IMAGE_ARRAY_SIZE = (AGENT_VIEW_SIZE * CELL_PIXELS, AGENT_VIEW_SIZE * CELL_PIXELS, 3)
 
 # Map of color names to RGB values
 COLORS = {
@@ -439,7 +440,6 @@ class Grid:
         :param r: target renderer object
         :param tile_size: tile size in pixels
         """
-
         assert r.width == self.width * tile_size
         assert r.height == self.height * tile_size
 
@@ -522,7 +522,6 @@ class Grid:
 
         for j in range(0, height):
             for i in range(0, width):
-
                 typeIdx  = array[i, j, 0]
                 colorIdx = array[i, j, 1]
                 openIdx  = array[i, j, 2]
@@ -609,15 +608,17 @@ class MiniGridEnv(gym.Env):
         right = 1
         forward = 2
 
+        # no operation
+        noop = 3
         # Pick up an object
-        pickup = 3
+        #pickup = 4
         # Drop an object
-        drop = 4
+        #drop = 5
         # Toggle/activate an object
-        toggle = 5
+        toggle = 4
 
         # Done completing task
-        done = 6
+        #done = 7
 
     class Actions_omni(IntEnum):
         top = 0
@@ -637,6 +638,7 @@ class MiniGridEnv(gym.Env):
         action_mode='forward',
         # 'forward' for forward, turn left, turn right and
         # 'omni' for moving top, down, left, right
+        partial_obs=False,
         terminate_at_goal=True
     ):
         # Action enumeration for this environment
@@ -658,25 +660,44 @@ class MiniGridEnv(gym.Env):
         # the entire grid.
         self.mode = mode
         self.action_mode = action_mode
+        self.partial_obs = partial_obs
         # Observations are dictionaries containing an
         # encoding of the grid and a textual 'mission' string
-        if mode == 'rgb':
-            self.observation_space = spaces.Box(
-                low=0,
-                high=255,
-                shape=GRID_ARRAY_SIZE,
-                dtype='uint8'
-            )
-        elif mode == 'grid':
-            self.observation_space = spaces.Box(
-                low=0,
-                high=255,
-                shape=(grid_size, grid_size, 3),
-                dtype='uint8'
-            )
-        else:
-            raise ValueError('No mode named %s'%mode)
+        if not partial_obs:
+            if mode == 'rgb':
+                self.observation_space = spaces.Box(
+                    low=0,
+                    high=255,
+                    shape=GRID_ARRAY_SIZE,
+                    dtype='uint8'
+                )
+            elif mode == 'grid':
+                self.observation_space = spaces.Box(
+                    low=0,
+                    high=255,
+                    shape=(grid_size, grid_size, 3),
+                    dtype='uint8'
+                )
+            else:
+                raise ValueError('No mode named %s'%mode)
 
+        else:
+            if mode == 'rgb':
+                self.observation_space = spaces.Box(
+                    low=0,
+                    high=255,
+                    shape=OBS_IMAGE_ARRAY_SIZE,
+                    dtype='uint8'
+                )
+            elif mode == 'grid':
+                self.observation_space = spaces.Box(
+                    low=0,
+                    high=255,
+                    shape=OBS_ARRAY_SIZE,
+                    dtype='uint8'
+                )
+            else:
+                raise ValueError('No mode named %s'%mode)
         self.observation_space = spaces.Dict({
             'image': self.observation_space
         })
@@ -729,10 +750,17 @@ class MiniGridEnv(gym.Env):
         self.step_count = 0
 
         # Return first observation
-        if self.mode == 'rgb':
-            obs = self.get_grid_render()
+        if not self.partial_obs:
+            if self.mode == 'rgb':
+                obs = self.get_grid_render()
+            else:
+                obs = self.gen_full()
         else:
-            obs = self.gen_full()
+            if self.mode == 'rgb':
+                obs = self.gen_obs()
+                obs = self.get_obs_render(obs['image'])
+            else:
+                obs = self.gen_obs()
 
         return obs
 
@@ -1096,30 +1124,34 @@ class MiniGridEnv(gym.Env):
                     done = True
                     reward = self._reward()
 
-            # Pick up an object
-            elif action == self.actions.pickup:
-                if fwd_cell and fwd_cell.can_pickup():
-                    if self.carrying is None:
-                        self.carrying = fwd_cell
-                        self.carrying.cur_pos = np.array([-1, -1])
-                        self.grid.set(*fwd_pos, None)
+            elif action == self.actions.noop:
+                # Stay at the same location
+                pass
 
-            # Drop an object
-            elif action == self.actions.drop:
-                if not fwd_cell and self.carrying:
-                    self.grid.set(*fwd_pos, self.carrying)
-                    self.carrying.cur_pos = fwd_pos
-                    self.carrying = None
+            # Pick up an object
+            #elif action == self.actions.pickup:
+            #    if fwd_cell and fwd_cell.can_pickup():
+            #        if self.carrying is None:
+            #            self.carrying = fwd_cell
+            #            self.carrying.cur_pos = np.array([-1, -1])
+            #            self.grid.set(*fwd_pos, None)
+
+            ## Drop an object
+            #elif action == self.actions.drop:
+            #    if not fwd_cell and self.carrying:
+            #        self.grid.set(*fwd_pos, self.carrying)
+            #        self.carrying.cur_pos = fwd_pos
+            #        self.carrying = None
 
             # Toggle/activate an object
             elif action == self.actions.toggle:
                 if fwd_cell:
                     fwd_cell.toggle(self, fwd_pos)
 
-            # Done action (not used by default)
-            elif action == self.actions.done:
-                pass
-
+#            # Done action (not used by default)
+#            elif action == self.actions.done:
+#                pass
+#
             else:
                 assert False, "unknown action"
         else:
@@ -1156,20 +1188,33 @@ class MiniGridEnv(gym.Env):
 
         if self.step_count >= self.max_steps:
             done = True
-        
-        #obs = self.gen_obs()
-        if self.mode == 'rgb':
-            obs = self.get_grid_render()
+
+        if not self.partial_obs:
+            if self.mode == 'rgb':
+                obs = self.get_grid_render()
+            else:
+                obs = self.gen_full()
         else:
-            obs = self.gen_full()
+            if self.mode == 'rgb':
+                obs = self.gen_obs()
+                obs = self.get_obs_render(obs['image'])
+            else:
+                obs = self.gen_obs()
 
         return obs, reward, done, {}
 
     def dummy_step(self):
-        if self.mode == 'rgb':
-            obs = self.get_grid_render()
+        if not self.partial_obs:
+            if self.mode == 'rgb':
+                obs = self.get_grid_render()
+            else:
+                obs = self.gen_full()
         else:
-            obs = self.gen_full()
+            if self.mode == 'rgb':
+                obs = self.gen_obs()
+                obs = self.get_obs_render(obs['image'])
+            else:
+                obs = self.gen_obs()
 
         return obs, 0, False, {}
 
@@ -1312,7 +1357,7 @@ class MiniGridEnv(gym.Env):
 
         r.endFrame()
 
-        return r.getPixmap()
+        return r.getArray().copy()
 
     def get_grid_render(self):
         """
