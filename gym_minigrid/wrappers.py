@@ -194,7 +194,30 @@ class ScaledObsWrapper_v2(gym.core.ObservationWrapper):
     def step_count(self):
         return self.env.step_count
 
+class ScaledObsWrapper_v3(gym.core.ObservationWrapper):
+    """
+    Take input observation image and scale it down to
+    64x64x3. Ignores mission strings.
+    """
 
+    def __init__(self, env):
+        super().__init__(env)
+        self.observation_space = spaces.Box(
+            low=0,
+            high=255,
+            shape=(64, 64, 3),
+            dtype='uint8'
+        )
+        self.actions = env.actions
+
+    def observation(self, obs):
+        image = obs
+        image = cv2.resize(image, (64, 64))
+        return image
+
+    @property
+    def step_count(self):
+        return self.env.step_count
 
 class FlatObsWrapper(gym.core.ObservationWrapper):
     """
